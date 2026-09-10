@@ -1,3 +1,4 @@
+from rules import is_valid_move
 import pygame
 import sys
 import os
@@ -169,12 +170,13 @@ while running:
 
                     # 点击了空位或对方棋子 -> 移动/吃子（暂时不限规则）
                     else:
-                        board[r][c] = board[sr][sc]  # 挪动棋子到新位置
-                        board[sr][sc] = None  # 原位置清空
-                        selected_piece = None  # 重置选中状态
+                        if is_valid_move(board,(sr,sc),(r,c)):
+                            board[r][c] = board[sr][sc]  # 挪动棋子到新位置
+                            board[sr][sc] = None  # 原位置清空
+                            selected_piece = None  # 重置选中状态
 
-                        # 轮换行棋方 (红 -> 黑 -> 红)
-                        current_turn = 'b' if current_turn == 'r' else 'r'
+                            # 轮换行棋方 (红 -> 黑 -> 红)
+                            current_turn = 'b' if current_turn == 'r' else 'r'
 
     draw_board()
     draw_pieces()
