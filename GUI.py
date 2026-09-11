@@ -1,4 +1,4 @@
-from rules import is_valid_move
+from move_rules import is_valid_move
 from move_generator import generator
 import pygame
 import sys

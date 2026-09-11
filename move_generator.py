@@ -1,4 +1,4 @@
-from rules import is_valid_move
+from move_rules import is_valid_move
 
 ROWS, COLS = 10, 9
 
