@@ -1,4 +1,5 @@
 from rules import is_valid_move
+from move_generator import generator
 import pygame
 import sys
 import os
@@ -139,6 +140,19 @@ def draw_pieces():
                 text_rect = text_surface.get_rect(center=(x, y))
                 screen.blit(text_surface, text_rect)
 
+def draw_moves():
+    if selected_piece is None:
+        return
+    marked_board = [row[:] for row in board]
+    generator(marked_board, selected_piece)
+    for r in range(ROWS):
+        for c in range(COLS):
+            if marked_board[r][c] is True:
+                x = MARGIN_X + c * CELL_SIZE
+                y = MARGIN_Y + r * CELL_SIZE
+                pygame.draw.circle(screen, SELECT_COLOR, (x, y), 6)
+
+
 # 7. 游戏主循环
 running = True
 while running:
@@ -180,6 +194,7 @@ while running:
 
     draw_board()
     draw_pieces()
+    draw_moves()
     pygame.display.flip()
 
 pygame.quit()
