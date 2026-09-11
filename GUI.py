@@ -2,7 +2,6 @@ from rules import is_valid_move
 import pygame
 import sys
 import os
-from move_rules import is_valid_move
 
 # 1. 初始化 Pygame
 pygame.init()
