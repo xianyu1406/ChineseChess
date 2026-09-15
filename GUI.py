@@ -1,5 +1,6 @@
 from move_rules import is_valid_move
 from move_generator import generator
+from game_controller import GameController  # 新增
 import pygame
 import sys
 import os
@@ -60,6 +61,9 @@ board = [
     [None,  None,  None,  None,  None,  None,  None,  None,  None ],
     ['r_r', 'r_n', 'r_b', 'r_a', 'r_k', 'r_a', 'r_b', 'r_n', 'r_r']
 ]
+
+# 新增：游戏控制器（将军检测 / 将死困毙判定 / 长将限制 / 系统弹框胜利）
+controller = GameController(board)
 
 # 交互状态变量
 selected_piece = None  # 当前选中的棋子坐标 (r, c)
@@ -161,6 +165,10 @@ while running:
             running = False
 
         elif event.type == pygame.MOUSEBUTTONDOWN:
+            # 新增：游戏结束后不再响应点击
+            if controller.game_over:
+                continue
+
             mx, my = pygame.mouse.get_pos()
             pos = get_board_pos(mx, my)
 
@@ -173,6 +181,9 @@ while running:
                     # 只能选择属于当前回合方的棋子
                     if clicked_piece and clicked_piece.startswith(current_turn):
                         selected_piece = (r, c)
+                        # 新增：被强制停用的棋子（长将违规）不能选中
+                        if controller.is_piece_disabled((r, c)):
+                            selected_piece = None
 
                 # 状态 B：已经选中了一个棋子，准备落子或改选
                 else:
@@ -181,16 +192,29 @@ while running:
                     # 点击了自己的另一个棋子 -> 切换选中
                     if clicked_piece and clicked_piece.startswith(current_turn):
                         selected_piece = (r, c)
+                        # 新增：被强制停用的棋子（长将违规）不能切换选中
+                        if controller.is_piece_disabled((r, c)):
+                            selected_piece = None
 
                     # 点击了空位或对方棋子 -> 移动/吃子（暂时不限规则）
                     else:
                         if is_valid_move(board,(sr,sc),(r,c)):
-                            board[r][c] = board[sr][sc]  # 挪动棋子到新位置
-                            board[sr][sc] = None  # 原位置清空
-                            selected_piece = None  # 重置选中状态
-
-                            # 轮换行棋方 (红 -> 黑 -> 红)
-                            current_turn = 'b' if current_turn == 'r' else 'r'
+                            # 新增：通过游戏控制器执行走棋
+                            # （内部自动处理：将军校验 / 长将检测 / 将死困毙判定 / 系统弹框胜利）
+                            if controller.try_move((sr, sc), (r, c), current_turn):
+                                selected_piece = None  # 重置选中状态
+                                # 新增：游戏未结束才轮换行棋方
+                                if not controller.game_over:
+                                    current_turn = 'b' if current_turn == 'r' else 'r'
+                            else:
+                                # 新增：走法不合法（被将军时不能解将 / 棋子被停用 / 游戏已结束）
+                                selected_piece = None
+                            # ===== 以下原有移动代码已由 controller.try_move 接管，注释保留不作删除 =====
+                            # board[r][c] = board[sr][sc]  # 挪动棋子到新位置
+                            # board[sr][sc] = None  # 原位置清空
+                            # selected_piece = None  # 重置选中状态
+                            # # 轮换行棋方 (红 -> 黑 -> 红)
+                            # current_turn = 'b' if current_turn == 'r' else 'r'
 
     draw_board()
     draw_pieces()
